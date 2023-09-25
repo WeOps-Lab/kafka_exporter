@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-benchmark-deployment
+  namespace: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-benchmark
+  template:
+    metadata:
+      labels:
+        app: kafka-benchmark
+    spec:
+      containers:
+      - name: kafka-benchmark
+        image: wurstmeister/kafka:0.10.2.0
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+             cd /opt/kafka/bin
+             while true; do
+                 # v0-10-0-2
+                ./kafka-producer-perf-test.sh --topic test --num-records 10000 --throughput -1 --producer-props bootstrap.servers=kafka-broker-v0-10-0-2.kafka:9092 batch.size=1000 acks=1 linger.ms=100000 buffer.memory=4294967296 compression.type=gzip request.timeout.ms=300000 --record-size 100
+                ./kafka-consumer-perf-test.sh --topic test --group testGroup --broker-list kafka-broker-v0-10-0-2.kafka:9092 --messages 8000 --threads 2 --from-latest
+
+                 # v0-11-0-3
+                ./kafka-producer-perf-test.sh --topic test --num-records 10000 --throughput -1 --producer-props bootstrap.servers=kafka-broker-v0-11-0-3.kafka:9092 batch.size=1000 acks=1 linger.ms=100000 buffer.memory=4294967296 compression.type=gzip request.timeout.ms=300000 --record-size 100
+                ./kafka-consumer-perf-test.sh --topic test --group testGroup --broker-list kafka-broker-v0-11-0-3.kafka:9092 --messages 8000 --threads 2 --from-latest
+
+
+                 # v1-0-2
+                ./kafka-producer-perf-test.sh --topic test --num-records 10000 --throughput -1 --producer-props bootstrap.servers=kafka-broker-v1-0-2.kafka:9092 batch.size=1000 acks=1 linger.ms=100000 buffer.memory=4294967296 compression.type=gzip request.timeout.ms=300000 --record-size 100
+                ./kafka-consumer-perf-test.sh --topic test --group testGroup --broker-list kafka-broker-v1-0-2.kafka:9092 --messages 8000 --threads 2 --from-latest
+
+                 # v2-0-1
+                ./kafka-producer-perf-test.sh --topic test --num-records 10000 --throughput -1 --producer-props bootstrap.servers=kafka-broker-v2-0-1.kafka:9092 batch.size=1000 acks=1 linger.ms=100000 buffer.memory=4294967296 compression.type=gzip request.timeout.ms=300000 --record-size 100
+                ./kafka-consumer-perf-test.sh --topic test --group testGroup --broker-list kafka-broker-v2-0-1.kafka:9092 --messages 8000 --threads 2 --from-latest
+
+                 # v2-1-0
+                ./kafka-producer-perf-test.sh --topic test --num-records 10000 --throughput -1 --producer-props bootstrap.servers=kafka-broker-v2-1-0.kafka:9092 batch.size=1000 acks=1 linger.ms=100000 buffer.memory=4294967296 compression.type=gzip request.timeout.ms=300000 --record-size 100
+                ./kafka-consumer-perf-test.sh --topic test --group testGroup --broker-list kafka-broker-v2-1-0.kafka:9092 --messages 8000 --threads 2 --from-latest
+
+                sleep 180
+             done
