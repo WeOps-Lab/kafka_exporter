@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: server-jaas-conf
+  namespace: kafka
+data:
+  kafka_server_jaas.conf: |-
+        KafkaServer {
+          org.apache.kafka.common.security.plain.PlainLoginModule required
+          username="admin"
+          password="admin-secret"
+          user_admin="admin-secret"
+          user_weops="Weops@#!$123";
+        };
+        Client {};
+
+  kafka.config: |-
+    security.protocol=SASL_PLAINTEXT
+    sasl.mechanism=PLAIN
+    sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="weops" password="Weops@#!$123";

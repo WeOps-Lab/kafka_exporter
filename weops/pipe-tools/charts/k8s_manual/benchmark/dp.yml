@@ -13,34 +13,92 @@ spec:
       labels:
         app: kafka-benchmark
     spec:
+      volumes:
+        - name: server-jaas-conf
+          configMap:
+            name: server-jaas-conf
       containers:
-      - name: kafka-benchmark
+      - name: kafka-benchmark-v0-10-0-2
         image: wurstmeister/kafka:0.10.2.0
+        volumeMounts:
+          - mountPath: /etc/kafka
+            name: server-jaas-conf
         command: ["/bin/sh", "-c"]
         args:
         - |
              cd /opt/kafka/bin
              while true; do
-                 # v0-10-0-2
-                ./kafka-producer-perf-test.sh --topic test --num-records 10000 --throughput -1 --producer-props bootstrap.servers=kafka-broker-v0-10-0-2.kafka:9092 batch.size=1000 acks=1 linger.ms=100000 buffer.memory=4294967296 compression.type=gzip request.timeout.ms=300000 --record-size 100
-                ./kafka-consumer-perf-test.sh --topic test --group testGroup --broker-list kafka-broker-v0-10-0-2.kafka:9092 --messages 8000 --threads 2 --from-latest
+                 echo "start v0-10-0-2 benchmark producer"
+                ./kafka-producer-perf-test.sh --topic test --num-records 10000 --throughput -1 --producer-props bootstrap.servers=kafka-broker-v0-10-0-2.kafka:9092 batch.size=1000 acks=1 linger.ms=100000 buffer.memory=4294967296 compression.type=gzip request.timeout.ms=300000 --record-size 100 --producer.config=/etc/kafka/kafka.config
+                echo "start v0-10-0-2 benchmark consumer"
+                ./kafka-consumer-perf-test.sh --topic test --group testGroup --broker-list kafka-broker-v0-10-0-2.kafka:9092 --messages 8000 --threads 2 --from-latest --consumer.config=/etc/kafka/kafka.config
+                 sleep 60
+             done
 
-                 # v0-11-0-3
-                ./kafka-producer-perf-test.sh --topic test --num-records 10000 --throughput -1 --producer-props bootstrap.servers=kafka-broker-v0-11-0-3.kafka:9092 batch.size=1000 acks=1 linger.ms=100000 buffer.memory=4294967296 compression.type=gzip request.timeout.ms=300000 --record-size 100
-                ./kafka-consumer-perf-test.sh --topic test --group testGroup --broker-list kafka-broker-v0-11-0-3.kafka:9092 --messages 8000 --threads 2 --from-latest
+      - name: kafka-benchmark-v0-11-0-3
+        image: wurstmeister/kafka:2.11-0.11.0.3
+        volumeMounts:
+          - mountPath: /etc/kafka
+            name: server-jaas-conf
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+             cd /opt/kafka/bin
+             while true; do
+                 echo "start v0-11-0-3 benchmark producer"
+                ./kafka-producer-perf-test.sh --topic test --num-records 10000 --throughput -1 --producer-props bootstrap.servers=kafka-broker-v0-11-0-3.kafka:9092 batch.size=1000 acks=1 linger.ms=100000 buffer.memory=4294967296 compression.type=gzip request.timeout.ms=300000 --record-size 100 --producer.config=/etc/kafka/kafka.config
+                echo "start v0-11-0-3 benchmark consumer"
+                ./kafka-consumer-perf-test.sh --topic test --group testGroup --broker-list kafka-broker-v0-11-0-3.kafka:9092 --messages 8000 --threads 2 --from-latest --consumer.config=/etc/kafka/kafka.config
+                sleep 60
+             done
 
+      - name: kafka-benchmark-v1-0-2
+        image: wurstmeister/kafka:2.11-1.0.2
+        volumeMounts:
+          - mountPath: /etc/kafka
+            name: server-jaas-conf
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+             cd /opt/kafka/bin
+             while true; do
+                 echo "start v1-0-2 benchmark producer"
+                ./kafka-producer-perf-test.sh --topic test --num-records 10000 --throughput -1 --producer-props bootstrap.servers=kafka-broker-v1-0-2.kafka:9092 batch.size=1000 acks=1 linger.ms=100000 buffer.memory=4294967296 compression.type=gzip request.timeout.ms=300000 --record-size 100 --producer.config=/etc/kafka/kafka.config
+                echo "start v1-0-2 benchmark consumer"
+                ./kafka-consumer-perf-test.sh --topic test --group testGroup --broker-list kafka-broker-v1-0-2.kafka:9092 --messages 8000 --threads 2 --from-latest --consumer.config=/etc/kafka/kafka.config
+                 sleep 60
+             done
 
-                 # v1-0-2
-                ./kafka-producer-perf-test.sh --topic test --num-records 10000 --throughput -1 --producer-props bootstrap.servers=kafka-broker-v1-0-2.kafka:9092 batch.size=1000 acks=1 linger.ms=100000 buffer.memory=4294967296 compression.type=gzip request.timeout.ms=300000 --record-size 100
-                ./kafka-consumer-perf-test.sh --topic test --group testGroup --broker-list kafka-broker-v1-0-2.kafka:9092 --messages 8000 --threads 2 --from-latest
+      - name: kafka-benchmark-v2-0-1
+        image: wurstmeister/kafka:2.12-2.0.1
+        volumeMounts:
+          - mountPath: /etc/kafka
+            name: server-jaas-conf
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+             cd /opt/kafka/bin
+             while true; do
+                 echo "start v2-0-1 benchmark producer"
+                ./kafka-producer-perf-test.sh --topic test --num-records 10000 --throughput -1 --producer-props bootstrap.servers=kafka-broker-v2-0-1.kafka:9092 batch.size=1000 acks=1 linger.ms=100000 buffer.memory=4294967296 compression.type=gzip request.timeout.ms=300000 --record-size 100 --producer.config=/etc/kafka/kafka.config
+                echo "start v2-0-1 benchmark consumer"
+                ./kafka-consumer-perf-test.sh --topic test --group testGroup --broker-list kafka-broker-v2-0-1.kafka:9092 --messages 8000 --threads 2 --from-latest --consumer.config=/etc/kafka/kafka.config
+                 sleep 60
+             done
 
-                 # v2-0-1
-                ./kafka-producer-perf-test.sh --topic test --num-records 10000 --throughput -1 --producer-props bootstrap.servers=kafka-broker-v2-0-1.kafka:9092 batch.size=1000 acks=1 linger.ms=100000 buffer.memory=4294967296 compression.type=gzip request.timeout.ms=300000 --record-size 100
-                ./kafka-consumer-perf-test.sh --topic test --group testGroup --broker-list kafka-broker-v2-0-1.kafka:9092 --messages 8000 --threads 2 --from-latest
-
-                 # v2-1-0
-                ./kafka-producer-perf-test.sh --topic test --num-records 10000 --throughput -1 --producer-props bootstrap.servers=kafka-broker-v2-1-0.kafka:9092 batch.size=1000 acks=1 linger.ms=100000 buffer.memory=4294967296 compression.type=gzip request.timeout.ms=300000 --record-size 100
-                ./kafka-consumer-perf-test.sh --topic test --group testGroup --broker-list kafka-broker-v2-1-0.kafka:9092 --messages 8000 --threads 2 --from-latest
-
-                sleep 180
+      - name: kafka-benchmark-v2-1-0
+        image: wurstmeister/kafka:2.12-2.1.0
+        volumeMounts:
+          - mountPath: /etc/kafka
+            name: server-jaas-conf
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+             cd /opt/kafka/bin
+             while true; do
+                 echo "start v2-1-0 benchmark producer"
+                ./kafka-producer-perf-test.sh --topic test --num-records 10000 --throughput -1 --producer-props bootstrap.servers=kafka-broker-v2-1-0.kafka:9092 batch.size=1000 acks=1 linger.ms=100000 buffer.memory=4294967296 compression.type=gzip request.timeout.ms=300000 --record-size 100 --producer.config=/etc/kafka/kafka.config
+                echo "start v2-1-0 benchmark consumer"
+                ./kafka-consumer-perf-test.sh --topic test --group testGroup --broker-list kafka-broker-v2-1-0.kafka:9092 --messages 8000 --threads 2 --from-latest --consumer.config=/etc/kafka/kafka.config
+                 sleep 60
              done

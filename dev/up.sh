@@ -1,0 +1,1 @@
+docker compose -p kafka_sasl_0_10_2_1 -f SASL.yml up -d

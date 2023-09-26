@@ -65,6 +65,10 @@ spec:
           - --kafka.server=kafka-broker-{{VERSION}}.kafka:9092
           - --kafka.version={{STRING_VERSION}}
           - --zookeeper.server=zookeeper-svc-{{VERSION}}.kafka:2181
+          - --sasl.enabled
+          - --sasl.mechanism=plain
+          - --sasl.username=weops
+          - --sasl.password=Weops@#!$123
         resources:
           requests:
             cpu: 100m

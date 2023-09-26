@@ -7,4 +7,5 @@ object=kafka
 echo "Uninstalling $object releases ..."
 
 kubectl delete statefulset -n $object --all
+kubectl delete deployment -n $object --all
 kubectl delete svc -n $object --all
