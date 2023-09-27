@@ -902,6 +902,8 @@ func setup(
 	}
 	defer exporter.client.Close()
 	prometheus.MustRegister(exporter)
+	// Remove Go collector
+	prometheus.Unregister(prometheus.NewGoCollector())
 
 	http.Handle(metricsPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
