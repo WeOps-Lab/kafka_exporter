@@ -69,6 +69,7 @@ spec:
           - --sasl.mechanism=plain
           - --sasl.username=weops
           - --sasl.password=Weops@#!$123
+          - --topic.exclude=.*consumer_offsets.*
         resources:
           requests:
             cpu: 100m
