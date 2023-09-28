@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"flag"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -20,7 +21,6 @@ import (
 	"github.com/krallistic/kazoo-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	plog "github.com/prometheus/common/promlog"
 	plogflag "github.com/prometheus/common/promlog/flag"
 	"github.com/prometheus/common/version"
@@ -40,6 +40,7 @@ const (
 )
 
 var (
+	upMetric                           *prometheus.Desc
 	clusterBrokers                     *prometheus.Desc
 	clusterBrokerInfo                  *prometheus.Desc
 	topicPartitions                    *prometheus.Desc
@@ -56,6 +57,10 @@ var (
 	consumergroupLagSum                *prometheus.Desc
 	consumergroupLagZookeeper          *prometheus.Desc
 	consumergroupMembers               *prometheus.Desc
+
+	up     = float64(1)
+	opts   = kafkaOpts{}
+	config = sarama.NewConfig()
 )
 
 // Exporter collects Kafka stats from the given server and exports them using
@@ -153,7 +158,7 @@ func canReadFile(path string) bool {
 // NewExporter returns an initialized Exporter.
 func NewExporter(opts kafkaOpts, topicFilter string, topicExclude string, groupFilter string, groupExclude string) (*Exporter, error) {
 	var zookeeperClient *kazoo.Kazoo
-	config := sarama.NewConfig()
+	config = sarama.NewConfig()
 	config.ClientID = clientID
 	kafkaVersion, err := sarama.ParseKafkaVersion(opts.kafkaVersion)
 	if err != nil {
@@ -258,7 +263,8 @@ func NewExporter(opts kafkaOpts, topicFilter string, topicExclude string, groupF
 	client, err := sarama.NewClient(opts.uri, config)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "Error Init Kafka Client")
+		up = float64(0)
+		klog.V(INFO).Infof("Please check connection setting, init client error: %v", err)
 	}
 
 	klog.V(TRACE).Infoln("Done Init Clients")
@@ -298,6 +304,7 @@ func NewExporter(opts kafkaOpts, topicFilter string, topicExclude string, groupF
 // Describe describes all the metrics ever exported by the Kafka exporter. It
 // implements prometheus.Collector.
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
+	ch <- upMetric
 	ch <- clusterBrokers
 	ch <- topicCurrentOffset
 	ch <- topicOldestOffset
@@ -317,6 +324,24 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 // Collect fetches the stats from configured Kafka location and delivers them
 // as Prometheus metrics. It implements prometheus.Collector.
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
+
+	var err error
+	e.client, err = sarama.NewClient(opts.uri, config)
+	if err != nil || e.client == nil {
+		up = float64(0)
+		klog.V(INFO).Infof("Please check connection setting, init client error: %v", err)
+	} else {
+		up = float64(1)
+	}
+
+	ch <- prometheus.MustNewConstMetric(
+		upMetric, prometheus.GaugeValue, up,
+	)
+
+	if up == float64(0) {
+		return
+	}
+
 	if e.allowConcurrent {
 		e.collect(ch)
 		return
@@ -717,8 +742,6 @@ func main() {
 		groupFilter   = toFlagString("group.filter", "Regex that determines which consumer groups to collect.", ".*")
 		groupExclude  = toFlagString("group.exclude", "Regex that determines which consumer groups to exclude.", "^$")
 		logSarama     = toFlagBool("log.enable-sarama", "Turn on Sarama logging, default is false.", false, "false")
-
-		opts = kafkaOpts{}
 	)
 
 	toFlagStringsVar("kafka.server", "Address (host:port) of Kafka server.", "kafka:9092", &opts.uri)
@@ -799,6 +822,12 @@ func setup(
 
 	klog.V(INFO).Infoln("Starting kafka_exporter", version.Info())
 	klog.V(DEBUG).Infoln("Build context", version.BuildContext())
+
+	upMetric = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "up"),
+		"up metric.",
+		nil, nil,
+	)
 
 	clusterBrokers = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "brokers"),
@@ -900,7 +929,14 @@ func setup(
 	if err != nil {
 		klog.Fatalln(err)
 	}
-	defer exporter.client.Close()
+
+	defer func(client sarama.Client) {
+		err := client.Close()
+		if err != nil {
+			klog.Error("Error closing client", err)
+		}
+	}(exporter.client)
+
 	prometheus.MustRegister(exporter)
 	// Remove Go collector
 	prometheus.Unregister(prometheus.NewGoCollector())
