@@ -742,14 +742,14 @@ func main() {
 	var (
 		listenAddress = toFlagString("web.listen-address", "Address to listen on for web interface and telemetry.", ":9308")
 		metricsPath   = toFlagString("web.telemetry-path", "Path under which to expose metrics.", "/metrics")
-		topicFilter   = toFlagString("topic.filter", "Regex that determines which topics to collect.", ".*")
-		topicExclude  = toFlagString("topic.exclude", "Regex that determines which topics to exclude.", "^$")
-		groupFilter   = toFlagString("group.filter", "Regex that determines which consumer groups to collect.", ".*")
-		groupExclude  = toFlagString("group.exclude", "Regex that determines which consumer groups to exclude.", "^$")
 		logSarama     = toFlagBool("log.enable-sarama", "Turn on Sarama logging, default is false.", false, "false")
 		saslUsername  = os.Getenv("SASL_USERNAME")
 		saslPassword  = os.Getenv("SASL_PASSWORD")
 		saslMechanism = os.Getenv("SASL_MECHANISM")
+		topicFilter   = os.Getenv("TOPIC_FILTER")
+		topicExclude  = os.Getenv("TOPIC_EXCLUDE")
+		groupFilter   = os.Getenv("GROUP_FILTER")
+		groupExclude  = os.Getenv("GROUP_EXCLUDE")
 	)
 
 	toFlagStringsVar("kafka.server", "Address (host:port) of Kafka server.", "kafka:9092", &opts.uri)
@@ -820,7 +820,7 @@ func main() {
 		}
 	}
 
-	setup(*listenAddress, *metricsPath, *topicFilter, *topicExclude, *groupFilter, *groupExclude, *logSarama, opts, labels)
+	setup(*listenAddress, *metricsPath, topicFilter, topicExclude, groupFilter, groupExclude, *logSarama, opts, labels)
 }
 
 func setup(
