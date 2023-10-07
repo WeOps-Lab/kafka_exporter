@@ -65,13 +65,14 @@ spec:
           - --kafka.server=kafka-cluster-v3-5-controller-headless.kafka:9094
           - --kafka.version={{STRING_VERSION}}
           - --sasl.enabled
-          - --sasl.mechanism=plain
           - --topic.exclude=.*consumer_offsets.*
         env:
         - name: SASL_USERNAME
           value: weops
         - name: SASL_PASSWORD
           value: Weops@#!$123
+        - name: SASL_MECHANISM
+          value: plain
         resources:
           requests:
             cpu: 100m
