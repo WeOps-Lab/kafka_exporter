@@ -723,6 +723,11 @@ func toFlagStringVar(name string, help string, value string, target *string) {
 	kingpin.Flag(name, help).Default(value).StringVar(target)
 }
 
+func envToFlagStringVar(name string, help string, value string, target string) {
+	flag.CommandLine.String(name, value, help) // hack around flag.Parse and klog.init flags
+	kingpin.Flag(name, help).Default(value).Envar(target)
+}
+
 func toFlagBoolVar(name string, help string, value bool, valueString string, target *bool) {
 	flag.CommandLine.Bool(name, value, help) // hack around flag.Parse and klog.init flags
 	kingpin.Flag(name, help).Default(valueString).BoolVar(target)
@@ -742,13 +747,26 @@ func main() {
 		groupFilter   = toFlagString("group.filter", "Regex that determines which consumer groups to collect.", ".*")
 		groupExclude  = toFlagString("group.exclude", "Regex that determines which consumer groups to exclude.", "^$")
 		logSarama     = toFlagBool("log.enable-sarama", "Turn on Sarama logging, default is false.", false, "false")
+		saslUsername  = os.Getenv("SASL_USERNAME")
+		saslPassword  = os.Getenv("SASL_PASSWORD")
 	)
 
 	toFlagStringsVar("kafka.server", "Address (host:port) of Kafka server.", "kafka:9092", &opts.uri)
 	toFlagBoolVar("sasl.enabled", "Connect using SASL/PLAIN, default is false.", false, "false", &opts.useSASL)
 	toFlagBoolVar("sasl.handshake", "Only set this to false if using a non-Kafka SASL proxy, default is true.", true, "true", &opts.useSASLHandshake)
-	toFlagStringVar("sasl.username", "SASL user name.", "", &opts.saslUsername)
-	toFlagStringVar("sasl.password", "SASL user password.", "", &opts.saslPassword)
+
+	if saslUsername != "" {
+		opts.saslUsername = saslUsername
+	} else {
+		toFlagStringVar("sasl.username", "SASL user name.", "", &opts.saslUsername)
+	}
+
+	if saslPassword != "" {
+		opts.saslPassword = saslPassword
+	} else {
+		toFlagStringVar("sasl.password", "SASL user password.", "", &opts.saslPassword)
+	}
+
 	toFlagStringVar("sasl.mechanism", "The SASL SCRAM SHA algorithm sha256 or sha512 or gssapi as mechanism", "", &opts.saslMechanism)
 	toFlagStringVar("sasl.service-name", "Service name when using kerberos Auth", "", &opts.serviceName)
 	toFlagStringVar("sasl.kerberos-config-path", "Kerberos config path", "", &opts.kerberosConfigPath)
