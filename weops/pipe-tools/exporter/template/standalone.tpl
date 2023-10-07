@@ -70,7 +70,7 @@ spec:
         - name: SASL_USERNAME
           value: weops
         - name: SASL_PASSWORD
-          value: Weops@#!$123
+          value: Weops@123
         - name: SASL_MECHANISM
           value: plain
         - name: TOPIC_FILTER

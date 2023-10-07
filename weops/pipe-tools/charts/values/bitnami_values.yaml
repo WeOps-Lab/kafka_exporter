@@ -11,7 +11,7 @@ sasl:
     users:
       - weops
     passwords:
-      - Weops@#!$123
+      - Weops@123
 
 controller:
   persistence:
