@@ -66,13 +66,14 @@ spec:
           - --kafka.version={{STRING_VERSION}}
           - --zookeeper.server=zookeeper-svc-{{VERSION}}.kafka:2181
           - --sasl.enabled
-          - --sasl.mechanism=plain
           - --topic.exclude=.*consumer_offsets.*
         env:
         - name: SASL_USERNAME
           value: weops
         - name: SASL_PASSWORD
           value: Weops@#!$123
+        - name: SASL_MECHANISM
+          value: plain
         resources:
           requests:
             cpu: 100m
