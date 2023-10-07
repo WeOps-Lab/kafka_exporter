@@ -66,7 +66,6 @@ spec:
           - --kafka.version={{STRING_VERSION}}
           - --zookeeper.server=zookeeper-svc-{{VERSION}}.kafka:2181
           - --sasl.enabled
-          - --topic.exclude=.*consumer_offsets.*
         env:
         - name: SASL_USERNAME
           value: weops
@@ -74,6 +73,8 @@ spec:
           value: Weops@#!$123
         - name: SASL_MECHANISM
           value: plain
+        - name: TOPIC_FILTER
+          value: .*consumer_offsets.*
         resources:
           requests:
             cpu: 100m
