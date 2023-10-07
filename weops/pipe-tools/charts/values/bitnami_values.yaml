@@ -1,0 +1,38 @@
+commonLabels:
+  object: kafka
+
+image:
+  tag: 3.5.1-debian-11-r61
+
+sasl:
+  enabledMechanisms: PLAIN
+  client:
+    users:
+      - weops
+    passwords:
+      - Weops@#!$123
+
+controller:
+  persistence:
+    enable: false
+
+externalAccess:
+  enabled: true
+  controller:
+    service:
+      type: NodePort
+      nodePorts:
+        - 39099
+        - 39100
+        - 39101
+  broker:
+    service:
+      type: NodePort
+  autoDiscovery:
+    enabled: true
+
+serviceAccount:
+  create: true
+
+rbac:
+  create: true
