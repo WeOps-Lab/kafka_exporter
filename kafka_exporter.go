@@ -749,6 +749,7 @@ func main() {
 		logSarama     = toFlagBool("log.enable-sarama", "Turn on Sarama logging, default is false.", false, "false")
 		saslUsername  = os.Getenv("SASL_USERNAME")
 		saslPassword  = os.Getenv("SASL_PASSWORD")
+		saslMechanism = os.Getenv("SASL_MECHANISM")
 	)
 
 	toFlagStringsVar("kafka.server", "Address (host:port) of Kafka server.", "kafka:9092", &opts.uri)
@@ -767,7 +768,12 @@ func main() {
 		toFlagStringVar("sasl.password", "SASL user password.", "", &opts.saslPassword)
 	}
 
-	toFlagStringVar("sasl.mechanism", "The SASL SCRAM SHA algorithm sha256 or sha512 or gssapi as mechanism", "", &opts.saslMechanism)
+	if saslMechanism != "" {
+		opts.saslMechanism = saslMechanism
+	} else {
+		toFlagStringVar("sasl.mechanism", "The SASL SCRAM SHA algorithm sha256 or sha512 or gssapi as mechanism", "", &opts.saslMechanism)
+	}
+
 	toFlagStringVar("sasl.service-name", "Service name when using kerberos Auth", "", &opts.serviceName)
 	toFlagStringVar("sasl.kerberos-config-path", "Kerberos config path", "", &opts.kerberosConfigPath)
 	toFlagStringVar("sasl.realm", "Kerberos realm", "", &opts.realm)
