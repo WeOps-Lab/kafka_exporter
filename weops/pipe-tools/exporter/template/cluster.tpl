@@ -62,13 +62,16 @@ spec:
           allowPrivilegeEscalation: false
           runAsUser: 0
         args:
-          - --kafka.server=kafka-controller-0-external.kafka:9094
+          - --kafka.server=kafka-cluster-v3-5-controller-headless.kafka:9094
           - --kafka.version={{STRING_VERSION}}
           - --sasl.enabled
           - --sasl.mechanism=plain
-          - --sasl.username=weops
-          - --sasl.password=Weops@#!$123
           - --topic.exclude=.*consumer_offsets.*
+        env:
+        - name: SASL_USERNAME
+          value: weops
+        - name: SASL_PASSWORD
+          value: Weops@#!$123
         resources:
           requests:
             cpu: 100m

@@ -1,5 +1,6 @@
 commonLabels:
   object: kafka
+  object_version: v3-5
 
 image:
   tag: 3.5.1-debian-11-r61
@@ -15,6 +16,14 @@ sasl:
 controller:
   persistence:
     enable: false
+
+broker:
+  persistence:
+    enabled: false
+
+zookeeper:
+  persistence:
+    enabled: false
 
 externalAccess:
   enabled: true
