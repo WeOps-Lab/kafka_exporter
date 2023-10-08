@@ -57,10 +57,6 @@ var (
 	consumergroupLagSum                *prometheus.Desc
 	consumergroupLagZookeeper          *prometheus.Desc
 	consumergroupMembers               *prometheus.Desc
-
-	up     = float64(1)
-	opts   = kafkaOpts{}
-	config = sarama.NewConfig()
 )
 
 // Exporter collects Kafka stats from the given server and exports them using
@@ -158,7 +154,7 @@ func canReadFile(path string) bool {
 // NewExporter returns an initialized Exporter.
 func NewExporter(opts kafkaOpts, topicFilter string, topicExclude string, groupFilter string, groupExclude string) (*Exporter, error) {
 	var zookeeperClient *kazoo.Kazoo
-	config = sarama.NewConfig()
+	config := sarama.NewConfig()
 	config.ClientID = clientID
 	kafkaVersion, err := sarama.ParseKafkaVersion(opts.kafkaVersion)
 	if err != nil {
@@ -263,7 +259,6 @@ func NewExporter(opts kafkaOpts, topicFilter string, topicExclude string, groupF
 	client, err := sarama.NewClient(opts.uri, config)
 
 	if err != nil {
-		up = float64(0)
 		klog.V(INFO).Infof("Please check connection setting, init client error: %v", err)
 	}
 
@@ -324,24 +319,6 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 // Collect fetches the stats from configured Kafka location and delivers them
 // as Prometheus metrics. It implements prometheus.Collector.
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
-
-	var err error
-	e.client, err = sarama.NewClient(opts.uri, config)
-	if err != nil || e.client == nil {
-		up = float64(0)
-		klog.V(INFO).Infof("Please check connection setting, init client error: %v", err)
-	} else {
-		up = float64(1)
-	}
-
-	ch <- prometheus.MustNewConstMetric(
-		upMetric, prometheus.GaugeValue, up,
-	)
-
-	if up == float64(0) {
-		return
-	}
-
 	if e.allowConcurrent {
 		e.collect(ch)
 		return
@@ -391,6 +368,21 @@ func (e *Exporter) collectChans(quit chan struct{}) {
 
 func (e *Exporter) collect(ch chan<- prometheus.Metric) {
 	var wg = sync.WaitGroup{}
+
+	brokerLen := len(e.client.Brokers())
+
+	if brokerLen < 1 {
+		ch <- prometheus.MustNewConstMetric(
+			upMetric, prometheus.GaugeValue, float64(0),
+		)
+		klog.V(INFO).Infof("Please check connection setting, broker len < 1")
+		return
+	} else {
+		ch <- prometheus.MustNewConstMetric(
+			upMetric, prometheus.GaugeValue, float64(1),
+		)
+	}
+
 	ch <- prometheus.MustNewConstMetric(
 		clusterBrokers, prometheus.GaugeValue, float64(len(e.client.Brokers())),
 	)
@@ -750,6 +742,8 @@ func main() {
 		topicExclude  = os.Getenv("TOPIC_EXCLUDE")
 		groupFilter   = os.Getenv("GROUP_FILTER")
 		groupExclude  = os.Getenv("GROUP_EXCLUDE")
+
+		opts = kafkaOpts{}
 	)
 
 	toFlagStringsVar("kafka.server", "Address (host:port) of Kafka server.", "kafka:9092", &opts.uri)
