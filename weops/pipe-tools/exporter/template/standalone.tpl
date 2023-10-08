@@ -73,8 +73,6 @@ spec:
           value: Weops@123
         - name: SASL_MECHANISM
           value: plain
-        - name: TOPIC_FILTER
-          value: .*consumer_offsets.*
         resources:
           requests:
             cpu: 100m
