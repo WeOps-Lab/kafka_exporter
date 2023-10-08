@@ -370,17 +370,17 @@ func (e *Exporter) collect(ch chan<- prometheus.Metric) {
 	var wg = sync.WaitGroup{}
 
 	brokerLen := len(e.client.Brokers())
+	up := float64(0)
+	if brokerLen >= 1 {
+		up = float64(1)
+	}
 
-	if brokerLen < 1 {
-		ch <- prometheus.MustNewConstMetric(
-			upMetric, prometheus.GaugeValue, float64(0),
-		)
+	ch <- prometheus.MustNewConstMetric(
+		upMetric, prometheus.GaugeValue, up,
+	)
+
+	if up == float64(0) {
 		klog.V(INFO).Infof("Please check connection setting, broker len < 1")
-		return
-	} else {
-		ch <- prometheus.MustNewConstMetric(
-			upMetric, prometheus.GaugeValue, float64(1),
-		)
 	}
 
 	ch <- prometheus.MustNewConstMetric(
