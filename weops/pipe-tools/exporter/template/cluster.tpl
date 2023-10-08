@@ -74,6 +74,12 @@ spec:
           value: plain
         - name: TOPIC_FILTER
           value: .*consumer_offsets.*
+        - name: TOPIC_EXCLUDE
+          value: ^$
+        - name: GROUP_FILTER
+          value: .*
+        - name: GROUP_EXCLUDE
+          value: ^$
         resources:
           requests:
             cpu: 100m
